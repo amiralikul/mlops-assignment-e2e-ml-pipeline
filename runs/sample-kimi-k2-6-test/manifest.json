@@ -1,0 +1,39 @@
+{
+  "artifact_uri": "runs/sample-kimi-k2-6-test",
+  "config": {
+    "cost_limit": 0.0,
+    "dataset_name": "princeton-nlp/SWE-bench_Verified",
+    "mlflow_experiment": "coding-agent-evaluation",
+    "mlflow_tracking_uri": "http://localhost:5000",
+    "model": "nebius/moonshotai/Kimi-K2.6",
+    "run_id": "sample-kimi-k2-6-test",
+    "runs_root": "runs",
+    "split": "test",
+    "subset": "verified",
+    "task_slice": "0:3",
+    "workers": 5
+  },
+  "created_at": "2026-06-30T12:35:15.015427+00:00",
+  "directories": {
+    "evaluation": "run-eval",
+    "evaluation_logs": "run-eval/logs",
+    "trajectories": "run-agent/trajectories"
+  },
+  "files": {
+    "config": "config.json",
+    "metrics": "metrics.json",
+    "predictions": "run-agent/preds.json"
+  },
+  "metrics": {
+    "fail_to_pass_failure": 3,
+    "fail_to_pass_success": 2,
+    "instances_resolved": 1,
+    "instances_total": 3,
+    "pass_to_pass_failure": 0,
+    "pass_to_pass_success": 677,
+    "patches_applied": 3,
+    "patches_existing": 3,
+    "resolution_rate": 0.3333333333333333
+  },
+  "run_id": "sample-kimi-k2-6-test"
+}

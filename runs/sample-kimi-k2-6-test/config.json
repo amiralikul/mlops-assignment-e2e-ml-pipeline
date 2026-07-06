@@ -1,0 +1,13 @@
+{
+  "cost_limit": 0.0,
+  "dataset_name": "princeton-nlp/SWE-bench_Verified",
+  "mlflow_experiment": "coding-agent-evaluation",
+  "mlflow_tracking_uri": "http://localhost:5000",
+  "model": "nebius/moonshotai/Kimi-K2.6",
+  "run_id": "sample-kimi-k2-6-test",
+  "runs_root": "runs",
+  "split": "test",
+  "subset": "verified",
+  "task_slice": "0:3",
+  "workers": 5
+}
