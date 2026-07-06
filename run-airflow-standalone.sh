@@ -3,7 +3,7 @@ set -euo pipefail
 export AIRFLOW_HOME=~/airflow
 export AIRFLOW__CORE__DAGS_FOLDER=$(pwd)/dags
 export AIRFLOW__CORE__LOAD_EXAMPLES=false
-export MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI:-http://localhost:5000}
+export MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI:-http://localhost:5001}
 
 mkdir -p $AIRFLOW_HOME
 

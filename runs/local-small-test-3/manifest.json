@@ -1,0 +1,40 @@
+{
+  "artifact_uri": "/Users/amir/projects/personal/nebius/mlops-assignment-e2e-ml-pipeline/runs/local-small-test-3",
+  "config": {
+    "cost_limit": 0.0,
+    "dataset_name": "princeton-nlp/SWE-bench_Verified",
+    "mlflow_experiment": "coding-agent-evaluation",
+    "mlflow_tracking_uri": "http://localhost:5001",
+    "model": "nebius/moonshotai/Kimi-K2.6",
+    "run_dir": "/Users/amir/projects/personal/nebius/mlops-assignment-e2e-ml-pipeline/runs/local-small-test-3",
+    "run_id": "local-small-test-3",
+    "runs_root": "/Users/amir/projects/personal/nebius/mlops-assignment-e2e-ml-pipeline/runs",
+    "split": "test",
+    "subset": "verified",
+    "task_slice": "0:1",
+    "workers": 2
+  },
+  "created_at": "2026-07-06T14:48:36.642047+00:00",
+  "directories": {
+    "evaluation": "run-eval",
+    "evaluation_logs": "run-eval/logs",
+    "trajectories": "run-agent/trajectories"
+  },
+  "files": {
+    "config": "config.json",
+    "metrics": "metrics.json",
+    "predictions": "run-agent/preds.json"
+  },
+  "metrics": {
+    "fail_to_pass_failure": 0,
+    "fail_to_pass_success": 2,
+    "instances_resolved": 1,
+    "instances_total": 1,
+    "pass_to_pass_failure": 0,
+    "pass_to_pass_success": 13,
+    "patches_applied": 1,
+    "patches_existing": 1,
+    "resolution_rate": 1.0
+  },
+  "run_id": "local-small-test-3"
+}

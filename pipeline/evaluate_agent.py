@@ -79,8 +79,6 @@ def run_agent_batch(run_config: dict[str, Any], run_dir: Path) -> Path:
         run_config["model"],
         "--workers",
         str(run_config["workers"]),
-        "--cost-limit",
-        str(run_config["cost_limit"]),
         "-o",
         str(trajectories_dir),
     ]
@@ -139,6 +137,11 @@ def collect_metrics(eval_dir: Path) -> dict[str, int | float]:
         report = json.loads(report_path.read_text())
         reports.extend(report.values())
 
+    if not reports:
+        summary_metrics = _collect_summary_metrics(eval_dir)
+        if summary_metrics is not None:
+            return summary_metrics
+
     total = len(reports)
     resolved = sum(1 for report in reports if report.get("resolved"))
     metrics: dict[str, int | float] = {
@@ -165,6 +168,30 @@ def collect_metrics(eval_dir: Path) -> dict[str, int | float]:
         metrics["pass_to_pass_failure"] += len(pass_to_pass.get("failure") or [])
 
     return metrics
+
+
+def _collect_summary_metrics(eval_dir: Path) -> dict[str, int | float] | None:
+    for summary_path in sorted(eval_dir.glob("*.json")):
+        summary = json.loads(summary_path.read_text())
+        if "submitted_instances" not in summary:
+            continue
+        submitted = int(summary.get("submitted_instances") or 0)
+        resolved = int(summary.get("resolved_instances") or 0)
+        return {
+            "instances_total": submitted,
+            "instances_resolved": resolved,
+            "resolution_rate": resolved / submitted if submitted else 0.0,
+            "patches_existing": submitted
+            - int(summary.get("empty_patch_instances") or 0),
+            "patches_applied": int(summary.get("completed_instances") or 0),
+            "fail_to_pass_success": 0,
+            "fail_to_pass_failure": 0,
+            "pass_to_pass_success": 0,
+            "pass_to_pass_failure": 0,
+            "empty_patch_instances": int(summary.get("empty_patch_instances") or 0),
+            "error_instances": int(summary.get("error_instances") or 0),
+        }
+    return None
 
 
 def summarize_run(run_config: dict[str, Any]) -> dict[str, str]:
@@ -259,9 +286,23 @@ def log_mlflow_run(
 def _run(command: list[str], cwd: Path) -> None:
     env = {
         **os.environ,
+        **_read_dotenv(PROJECT_ROOT / ".env"),
         "MSWEA_COST_TRACKING": "ignore_errors",
     }
     subprocess.run(command, cwd=cwd, env=env, check=True)
+
+
+def _read_dotenv(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {}
+    values = {}
+    for line in path.read_text().splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, value = stripped.split("=", 1)
+        values[key.strip()] = value.strip().strip('"').strip("'")
+    return values
 
 
 def _default_run_id() -> str:

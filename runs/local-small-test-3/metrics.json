@@ -1,0 +1,11 @@
+{
+  "fail_to_pass_failure": 0,
+  "fail_to_pass_success": 2,
+  "instances_resolved": 1,
+  "instances_total": 1,
+  "pass_to_pass_failure": 0,
+  "pass_to_pass_success": 13,
+  "patches_applied": 1,
+  "patches_existing": 1,
+  "resolution_rate": 1.0
+}

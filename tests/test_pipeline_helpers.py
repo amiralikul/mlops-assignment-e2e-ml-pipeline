@@ -1,9 +1,12 @@
 import json
+from pathlib import Path
 
 from pipeline.evaluate_agent import (
     build_run_config,
     collect_metrics,
     prepare_run_dir,
+    run_agent_batch,
+    run_swebench_eval,
     write_manifest,
 )
 
@@ -102,6 +105,30 @@ def test_collect_metrics_aggregates_swebench_reports(tmp_path):
     }
 
 
+def test_collect_metrics_falls_back_to_swebench_summary_json(tmp_path):
+    eval_dir = tmp_path / "run-eval"
+    eval_dir.mkdir()
+    (eval_dir / "model.run-id.json").write_text(
+        json.dumps(
+            {
+                "submitted_instances": 1,
+                "completed_instances": 0,
+                "resolved_instances": 0,
+                "empty_patch_instances": 1,
+                "error_instances": 0,
+            }
+        )
+    )
+
+    metrics = collect_metrics(eval_dir)
+
+    assert metrics["instances_total"] == 1
+    assert metrics["instances_resolved"] == 0
+    assert metrics["resolution_rate"] == 0.0
+    assert metrics["empty_patch_instances"] == 1
+    assert metrics["error_instances"] == 0
+
+
 def test_write_manifest_records_core_artifacts(tmp_path):
     run_dir = tmp_path / "run-1"
     (run_dir / "run-agent" / "trajectories").mkdir(parents=True)
@@ -130,3 +157,54 @@ def test_write_manifest_records_core_artifacts(tmp_path):
     assert manifest["files"]["metrics"] == "metrics.json"
     assert manifest["directories"]["trajectories"] == "run-agent/trajectories"
     assert manifest["metrics"]["instances_total"] == 0
+
+
+def test_run_agent_batch_uses_supported_mini_swe_agent_batch_options(
+    tmp_path, monkeypatch
+):
+    captured = {}
+
+    def fake_run(command, cwd, env, check):
+        captured["command"] = command
+        output_dir = Path(command[command.index("-o") + 1])
+        output_dir.mkdir(parents=True, exist_ok=True)
+        (output_dir / "preds.json").write_text("{}")
+
+    monkeypatch.setattr("pipeline.evaluate_agent.subprocess.run", fake_run)
+    config = build_run_config(
+        {
+            "run_id": "batch-command",
+            "runs_root": str(tmp_path),
+            "cost_limit": 0,
+        }
+    )
+    run_dir = prepare_run_dir(config)
+
+    run_agent_batch(config, run_dir)
+
+    assert "--cost-limit" not in captured["command"]
+    assert "--workers" in captured["command"]
+    assert "--slice" in captured["command"]
+
+
+def test_subprocess_tasks_load_dotenv_values(tmp_path, monkeypatch):
+    captured = {}
+
+    def fake_run(command, cwd, env, check):
+        captured["env"] = env
+
+    monkeypatch.setattr("pipeline.evaluate_agent.PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr("pipeline.evaluate_agent.subprocess.run", fake_run)
+    (tmp_path / ".env").write_text(
+        "NEBIUS_API_KEY=secret-from-dotenv\n"
+        "IGNORED_COMMENTED_VALUE=before\n"
+        "# IGNORED_COMMENTED_VALUE=after\n"
+    )
+    config = build_run_config({"run_id": "dotenv", "runs_root": str(tmp_path)})
+    preds_path = tmp_path / "preds.json"
+    preds_path.write_text("{}")
+
+    run_swebench_eval(config, preds_path, tmp_path)
+
+    assert captured["env"]["NEBIUS_API_KEY"] == "secret-from-dotenv"
+    assert captured["env"]["MSWEA_COST_TRACKING"] == "ignore_errors"
