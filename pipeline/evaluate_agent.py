@@ -67,9 +67,7 @@ def run_agent_batch(run_config: dict[str, Any], run_dir: Path) -> Path:
     trajectories_dir.mkdir(parents=True, exist_ok=True)
 
     command = [
-        "uv",
-        "run",
-        "mini-extra",
+        *_command_prefix("mini-extra"),
         "swebench",
         "--subset",
         run_config["subset"],
@@ -113,9 +111,7 @@ def run_swebench_eval(
     eval_dir = run_dir / "run-eval"
     eval_dir.mkdir(parents=True, exist_ok=True)
     command = [
-        "uv",
-        "run",
-        "python",
+        *_command_prefix("python"),
         "-m",
         "swebench.harness.run_evaluation",
         "--dataset_name",
@@ -290,6 +286,12 @@ def _run(command: list[str], cwd: Path) -> None:
         "MSWEA_COST_TRACKING": "ignore_errors",
     }
     subprocess.run(command, cwd=cwd, env=env, check=True)
+
+
+def _command_prefix(executable: str) -> list[str]:
+    if os.environ.get("PIPELINE_USE_UV") == "0":
+        return [executable]
+    return ["uv", "run", executable]
 
 
 def _read_dotenv(path: Path) -> dict[str, str]:

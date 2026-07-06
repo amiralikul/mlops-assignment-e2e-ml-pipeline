@@ -1,0 +1,67 @@
+services:
+  mlops-image:
+    image: mlops-assignment:latest
+    build:
+      context: .
+    command: ["true"]
+
+  mlflow:
+    image: mlops-assignment:latest
+    depends_on:
+      mlops-image:
+        condition: service_completed_successfully
+    command:
+      - mlflow
+      - server
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5000"
+      - --backend-store-uri
+      - sqlite:///${PWD}/mlflow.db
+      - --default-artifact-root
+      - ${PWD}/mlruns
+    ports:
+      - "5001:5000"
+    volumes:
+      - ${PWD}:${PWD}
+    working_dir: ${PWD}
+
+  airflow:
+    image: mlops-assignment:latest
+    depends_on:
+      mlops-image:
+        condition: service_completed_successfully
+      mlflow:
+        condition: service_started
+    command:
+      - uv
+      - run
+      - --with
+      - apache-airflow
+      - --with
+      - apache-airflow-providers-docker
+      - apache-airflow
+      - standalone
+    env_file:
+      - .env
+    environment:
+      AIRFLOW_HOME: ${PWD}/.airflow-compose
+      AIRFLOW__CORE__DAGS_FOLDER: ${PWD}/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: "admin:admin"
+      EVALUATION_IMAGE: mlops-assignment:latest
+      DOCKER_OPERATOR_NETWORK: mlops-assignment
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_EXPERIMENT_NAME: coding-agent-evaluation
+      PROJECT_ROOT: ${PWD}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ${PWD}:${PWD}
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /mlops-assignment
+
+networks:
+  default:
+    name: mlops-assignment

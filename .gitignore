@@ -13,3 +13,4 @@ SWE-bench/
 
 mlflow.db
 mlruns/
+.airflow-compose/

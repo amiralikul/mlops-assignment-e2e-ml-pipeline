@@ -9,4 +9,4 @@ mkdir -p $AIRFLOW_HOME
 
 echo '{"admin": "admin"}' > $AIRFLOW_HOME/simple_auth_manager_passwords.json.generated
 
-uv run --with apache-airflow apache-airflow standalone
+uv run --with apache-airflow --with apache-airflow-providers-docker apache-airflow standalone

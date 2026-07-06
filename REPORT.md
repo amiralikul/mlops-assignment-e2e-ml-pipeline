@@ -62,6 +62,59 @@ trigger it with params such as:
 }
 ```
 
+## Production-Style Docker Mode
+
+The repository also includes a DockerOperator-based DAG and Docker Compose
+deployment for a more isolated local or VM setup.
+
+Build the project image:
+
+```bash
+docker build -t mlops-assignment:latest .
+```
+
+Start Airflow and MLflow with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+Compose exposes:
+
+- Airflow: `http://localhost:8080`
+- MLflow: `http://localhost:5001`
+
+The production-style DAG is `evaluate-agent-docker`. Its task graph is:
+
+```text
+prepare_run -> DockerOperator(run_agent) -> DockerOperator(run_eval) -> DockerOperator(summarize_and_log)
+```
+
+The Airflow service mounts the repository path and `/var/run/docker.sock`. The
+DockerOperator tasks run the `mlops-assignment:latest` image, mount the same
+repository path into child containers, and use the Docker socket so
+mini-swe-agent can start SWE-bench testbed containers.
+
+Trigger `evaluate-agent-docker` with the same params as the local DAG. In
+Compose mode, use:
+
+```json
+{
+  "split": "test",
+  "subset": "verified",
+  "workers": 2,
+  "model": "nebius/moonshotai/Kimi-K2.6",
+  "task_slice": "0:1",
+  "run_id": "docker-small-test",
+  "cost_limit": 0,
+  "mlflow_tracking_uri": "http://mlflow:5000",
+  "mlflow_experiment": "coding-agent-evaluation"
+}
+```
+
+This mode writes the same `runs/<run-id>/` artifact layout as the regular
+`evaluate-agent` DAG.
+
 ## Artifact Layout
 
 Each run is written under `runs/<run-id>/`:
